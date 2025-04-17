@@ -11,7 +11,7 @@ import ReactDOM from 'react-dom/client';
 import { BrowserRouter, Route, Routes } from 'react-router-dom';
 
 import { GlobalContextProvider } from './context';
-import { Home, CreateBattle, JoinBattle, Battle, Battleground } from './page'
+import { Home, CreateBattle, JoinBattle, Battle, Battleground,TradeCard } from './page'
 
 import { OnboardModal } from './components';
 import './index.css';
@@ -26,6 +26,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
         <Route path="/join-battle" element={<JoinBattle />} />
         <Route path="/battleground" element={<Battleground />} />
         <Route path="/battle/:battleName" element={<Battle />} />
+        <Route path="/TradeCard" element={<TradeCard />} />
       </Routes> 
     </GlobalContextProvider>
   </BrowserRouter>,
