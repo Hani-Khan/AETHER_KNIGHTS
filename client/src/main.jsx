@@ -31,3 +31,4 @@ ReactDOM.createRoot(document.getElementById('root')).render(
     </GlobalContextProvider>
   </BrowserRouter>,
 );
+
