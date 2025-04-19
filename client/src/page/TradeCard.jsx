@@ -139,19 +139,36 @@ const TradeCard = () => {
 
   // Fetch all players with their stats
   const fetchAllPlayers = async () => {
-    if (!contract) return;
+    if (!contract || !walletAddress) return;
     
     try {
       setLoading(true);
       const battles = await contract.getAllBattles();
       const activeBattles = battles.filter(b => b.battleStatus === 1);
       
+      // Get all unique player addresses except current player and their opponent
       const playerAddresses = new Set();
+      let opponentAddress = null;
+
       activeBattles.forEach(battle => {
-        if (battle.players[0]) playerAddresses.add(battle.players[0]);
-        if (battle.players[1]) playerAddresses.add(battle.players[1]);
+        // Find if current player is in this battle
+        const isPlayerInBattle = battle.players.includes(walletAddress);
+        
+        if (isPlayerInBattle) {
+          // If current player is in this battle, identify opponent
+          opponentAddress = battle.players.find(p => p !== walletAddress);
+        } else {
+          // Only add players from battles that don't involve current player
+          if (battle.players[0] && battle.players[0] !== walletAddress) {
+            playerAddresses.add(battle.players[0]);
+          }
+          if (battle.players[1] && battle.players[1] !== walletAddress) {
+            playerAddresses.add(battle.players[1]);
+          }
+        }
       });
 
+      // Fetch data for eligible players
       const playersData = await Promise.all(
         Array.from(playerAddresses).map(async (address) => {
           try {
@@ -174,6 +191,7 @@ const TradeCard = () => {
         })
       );
 
+      // Filter out null values and set state
       setAllPlayers(playersData.filter(p => p !== null));
     } catch (error) {
       console.error("Failed to fetch players:", error);
@@ -182,35 +200,26 @@ const TradeCard = () => {
     }
   };
 
-  // Filter players based on toggle state and battle status
+  // Filter players based on toggle state and additional criteria
   const getFilteredPlayers = () => {
     if (!showPlayerStats) return [];
     
-    let opponentAddress = null;
-    if (gameData?.activeBattle?.players) {
-      opponentAddress = gameData.activeBattle.players.find(
-        p => p !== walletAddress
-      );
-    }
-
     return allPlayers.filter(player => 
       player.address &&
-      player.address !== walletAddress &&
-      player.address !== opponentAddress &&
       player.inBattle
     );
   };
 
   useEffect(() => {
     fetchAllPlayers();
-  }, [contract, showPlayerStats]); // Add showPlayerStats to dependencies
+  }, [contract, showPlayerStats, walletAddress]);
 
   const filteredPlayers = getFilteredPlayers();
 
   return (
     <div className="flex flex-col items-center gap-4 p-4">
       <div className="w-full flex justify-between items-center mb-4">
-        <h1 className="text-2xl font-bold">Available Traders</h1>
+        <h1 className="text-2xl font-bold text-white">Available Traders</h1> {/* Changed text color to white */}
         {gameData?.activeBattle?.name && (
           <CustomButton
             title="Return to Battle"
@@ -253,11 +262,7 @@ const TradeCard = () => {
           <p className="text-white mb-4">
             Trade visibility is currently disabled.
           </p>
-          <CustomButton
-            title="Enable Trading"
-            handleClick={() => navigate('/')} // Or directly to game info
-            restStyles="bg-green-500 hover:bg-green-600"
-          />
+          {/* Removed the "Enable Trading" button completely */}
         </div>
       )}
     </div>
