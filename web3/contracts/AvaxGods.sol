@@ -63,6 +63,7 @@ contract AVAXGods is ERC1155, Ownable(msg.sender), ERC1155Supply {
         uint256 playerMana; /// @param playerMana player mana; affected by battle results
         uint256 playerHealth; /// @param playerHealth player health; affected by battle results
         bool inBattle; /// @param inBattle boolean to indicate if a player is in battle
+        bool enableTrade;  // New field for trade functionality
     }
 
     /// @dev Battle struct to store battle info
@@ -164,6 +165,11 @@ contract AVAXGods is ERC1155, Ownable(msg.sender), ERC1155Supply {
     );
     event RoundEnded(address[2] damagedPlayers);
 
+    // Add new events for trade functionality
+    event TradeRequested(address indexed from, address indexed to);
+    event TradeAccepted(address indexed from, address indexed to);
+    event TradeRejected(address indexed from, address indexed to);
+
     /// @dev Initializes the contract by setting a `metadataURI` to the token collection
     /// @param _metadataURI baseURI where token metadata is stored
     constructor(string memory _metadataURI) ERC1155(_metadataURI) {
@@ -177,7 +183,7 @@ contract AVAXGods is ERC1155, Ownable(msg.sender), ERC1155Supply {
 
     function initialize() private {
         gameTokens.push(GameToken("", 0, 0, 0));
-        players.push(Player(address(0), "", 0, 0, false));
+        players.push(Player(address(0), "", 0, 0, false, false)); // Added false for enableTrade
         battles.push(
             Battle(
                 BattleStatus.PENDING,
@@ -192,18 +198,15 @@ contract AVAXGods is ERC1155, Ownable(msg.sender), ERC1155Supply {
 
     /// @dev Registers a player
     /// @param _name player name; set by player
-    function registerPlayer(
-        string memory _name,
-        string memory _gameTokenName
-    ) external {
-        require(!isPlayer(msg.sender), "Player already registered"); // Require that player is not already registered
-
+    function registerPlayer(string memory _name, string memory _gameTokenName) external {
+        require(!isPlayer(msg.sender), "Player already registered");
+    
         uint256 _id = players.length;
-        players.push(Player(msg.sender, _name, 10, 25, false)); // Adds player to players array
-        playerInfo[msg.sender] = _id; // Creates player info mapping
-
+        players.push(Player(msg.sender, _name, 10, 25, false, false)); // Added false for enableTrade
+        playerInfo[msg.sender] = _id;
+    
         createRandomGameToken(_gameTokenName);
-
+    
         emit NewPlayer(msg.sender, _name); // Emits NewPlayer event
     }
 
@@ -280,6 +283,71 @@ contract AVAXGods is ERC1155, Ownable(msg.sender), ERC1155Supply {
 
     function getTotalSupply() external view returns (uint256) {
         return totalTokenMinted;
+    }
+
+    // Function to toggle trade availability
+    function toggleTrade() public {
+        require(isPlayer(msg.sender), "Player doesn't exist!");
+        players[playerInfo[msg.sender]].enableTrade = !players[playerInfo[msg.sender]].enableTrade;
+    }
+
+    // Function to request a trade
+    function requestTrade(address _to) public {
+        require(isPlayer(msg.sender), "Player doesn't exist!");
+        require(isPlayer(_to), "Target player doesn't exist!");
+        require(players[playerInfo[_to]].enableTrade, "Target player has not enabled trading!");
+        
+        // Check if both players are in battles
+        require(players[playerInfo[msg.sender]].inBattle, "You must be in a battle to trade!");
+        require(players[playerInfo[_to]].inBattle, "Target player must be in a battle to trade!");
+        
+        // Check if they are not in the same battle
+        bool inSameBattle = false;
+        for (uint i = 0; i < battles.length; i++) {
+            if (battles[i].battleStatus == BattleStatus.STARTED) {
+                if ((battles[i].players[0] == msg.sender && battles[i].players[1] == _to) ||
+                    (battles[i].players[1] == msg.sender && battles[i].players[0] == _to)) {
+                    inSameBattle = true;
+                    break;
+                }
+            }
+        }
+        require(!inSameBattle, "Cannot trade with your current opponent!");
+        
+        emit TradeRequested(msg.sender, _to);
+    }
+
+    // Function to accept trade
+    function acceptTrade(address _from) public {
+        require(isPlayer(msg.sender), "Player doesn't exist!");
+        require(isPlayer(_from), "Requesting player doesn't exist!");
+        
+        // Swap the attack and defense values
+        GameToken memory fromToken = getPlayerToken(_from);
+        GameToken memory toToken = getPlayerToken(msg.sender);
+        
+        uint256 tempAttack = fromToken.attackStrength;
+        uint256 tempDefense = fromToken.defenseStrength;
+        
+        fromToken.attackStrength = toToken.attackStrength;
+        fromToken.defenseStrength = toToken.defenseStrength;
+        
+        toToken.attackStrength = tempAttack;
+        toToken.defenseStrength = tempDefense;
+        
+        // Update the tokens
+        gameTokens[playerTokenInfo[_from]] = fromToken;
+        gameTokens[playerTokenInfo[msg.sender]] = toToken;
+        
+        emit TradeAccepted(_from, msg.sender);
+    }
+
+    // Function to reject trade
+    function rejectTrade(address _from) public {
+        require(isPlayer(msg.sender), "Player doesn't exist!");
+        require(isPlayer(_from), "Requesting player doesn't exist!");
+        
+        emit TradeRejected(_from, msg.sender);
     }
 
     /// @dev Creates a new battle

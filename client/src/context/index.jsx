@@ -634,4 +634,46 @@ useEffect(() => {
 }
 
 export const useGlobalContext = () => useContext(GlobalContext);
+
+// Add this to your state in the GlobalContextProvider
+const [showTradeAlert, setShowTradeAlert] = useState({
+  status: false,
+  message: '',
+  fromAddress: '',
+  fromName: ''
+});
+
+// Add this to the value object in your context provider
+showTradeAlert,
+setShowTradeAlert,
+
+// Add this function to handle trade requests
+const handleTradeRequest = (fromAddress, fromName) => {
+  setShowTradeAlert({
+    status: true,
+    message: `You have received a trade request from ${fromName}`,
+    fromAddress,
+    fromName
+  });
+};
+
+// Add this to your useEffect where you listen for contract events
+useEffect(() => {
+  if (contract) {
+    contract.on('TradeRequested', (from, to) => {
+      // Only show alert if the current user is the recipient
+      if (to.toLowerCase() === walletAddress.toLowerCase()) {
+        // Get the player name
+        contract.getPlayer(from).then((player) => {
+          handleTradeRequest(from, player.playerName);
+        });
+      }
+    });
+    
+    // Clean up the event listener
+    return () => {
+      contract.off('TradeRequested');
+    };
+  }
+}, [contract, walletAddress]);
    
