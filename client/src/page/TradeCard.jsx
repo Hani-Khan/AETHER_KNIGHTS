@@ -388,32 +388,36 @@ const TradeCard = () => {
         {renderIncomingRequests()}
 
         {/* Players available for trading */}
-        <h2 className={styles.joinHeadText}>Players Available for Trading</h2>
-        <div className={styles.joinContainer}>
-          {loading ? (
-            <p className={styles.joinLoading}>Loading players...</p>
-          ) : players.length > 0 ? (
-            players.map((player, index) => (
-              <div key={`player-${index}`} className={styles.flexBetween}>
-                <div>
-                  <p className={styles.joinBattleTitle}>{player.name}</p>
-                  <div className="flex mt-1">
-                    <p className="text-yellow-400 mr-3">ATK: {player.attack}</p>
-                    <p className="text-red-600">DEF: {player.defense}</p>
+        {tradeEnabled && (
+          <>
+            <h2 className={styles.joinHeadText}>Players Available for Trading</h2>
+            <div className={styles.joinContainer}>
+              {loading ? (
+                <p className={styles.joinLoading}>Loading players...</p>
+              ) : players.length > 0 ? (
+                players.map((player, index) => (
+                  <div key={`player-${index}`} className={styles.flexBetween}>
+                    <div>
+                      <p className={styles.joinBattleTitle}>{player.name}</p>
+                      <div className="flex mt-1">
+                        <p className="text-yellow-400 mr-3">ATK: {player.attack}</p>
+                        <p className="text-red-600">DEF: {player.defense}</p>
+                      </div>
+                    </div>
+                    <CustomButton 
+                      title="Request Trade"
+                      handleClick={() => handleTradeRequest(player)}
+                      restStyles={!tradeEnabled ? 'opacity-50 cursor-not-allowed' : ''}
+                      disabled={!tradeEnabled}
+                    />
                   </div>
-                </div>
-                <CustomButton 
-                  title="Request Trade"
-                  handleClick={() => handleTradeRequest(player)}
-                  restStyles={!tradeEnabled ? 'opacity-50 cursor-not-allowed' : ''}
-                  disabled={!tradeEnabled}
-                />
-              </div>
-            ))
-          ) : (
-            <p className={styles.joinLoading}>No players available for trading</p>
-          )}
-        </div>
+                ))
+              ) : (
+                <p className={styles.joinLoading}>No players available for trading</p>
+              )}
+            </div>
+          </>
+        )}
       </div>
 
       {/* Trade confirmation modal */}
