@@ -93,73 +93,47 @@ const Battle = () => {
     }
 
 
-    // Add this useEffect to check for trade requests on the Battle page
-    useEffect(() => {
-        const checkForTradeRequests = async () => {
-            if (!contract || !walletAddress) return;
+    const handleAcceptTradeRequest = async () => {
+        try {
+            await contract.acceptTrade(currentTradeRequest.from.address);
+            setShowTradeRequestModal(false);
             
-            try {
-                // Get the current block number
-                const currentBlock = await contract.provider.getBlockNumber();
-                // Set a reasonable block range (last 2000 blocks to stay under the 2048 limit)
-                const fromBlock = Math.max(0, currentBlock - 2000);
-                
-                // Get trade events from contract with limited block range
-                const filter = contract.filters.TradeRequested(null, walletAddress);
-                const events = await contract.queryFilter(filter, fromBlock, currentBlock);
-                
-                // If there are trade requests, process the most recent one
-                if (events.length > 0) {
-                    // Only show the modal if it's not already showing and we haven't rejected or accepted this request
-                    const latestEvent = events[events.length - 1];
-                    const tradeHash = latestEvent.transactionHash;
-                    
-                    // Check if this trade was already accepted or rejected
-                    const wasAccepted = localStorage.getItem(`accepted_trade_${tradeHash}`);
-                    const wasRejected = localStorage.getItem(`rejected_trade_${tradeHash}`);
-                    
-                    if (!showTradeRequestModal && !wasAccepted && !wasRejected) {
-                        const fromAddress = latestEvent.args.from;
-                        
-                        const player = await contract.getPlayer(fromAddress);
-                        const token = await contract.getPlayerToken(fromAddress);
-                        const myToken = await contract.getPlayerToken(walletAddress);
-                        
-                        const request = {
-                            transactionHash: tradeHash,
-                            from: {
-                                address: fromAddress,
-                                name: player.playerName,
-                                attack: token.attackStrength.toNumber(),
-                                defense: token.defenseStrength.toNumber()
-                            },
-                            to: {
-                                address: walletAddress,
-                                name: gameData.playerName || "You",
-                                attack: myToken.attackStrength.toNumber(),
-                                defense: myToken.defenseStrength.toNumber()
-                            }
-                        };
-                        
-                        // Set the current trade request and show the modal
-                        setCurrentTradeRequest(request);
-                        setShowTradeRequestModal(true);
-                    }
-                }
-            } catch (error) {
-                console.error("Failed to check for trade requests:", error);
-                setErrorMessage(error.message);
+            // Store that this trade was accepted in localStorage
+            if (currentTradeRequest.transactionHash) {
+                localStorage.setItem(`accepted_trade_${currentTradeRequest.transactionHash}`, 'true');
             }
-        };
-        
-        // Check for trade requests when the component mounts
-        checkForTradeRequests();
-        
-        // Set up an interval to periodically check for new trade requests
-        const interval = setInterval(checkForTradeRequests, 10000); // Check every 10 seconds
-        
-        return () => clearInterval(interval);
-    }, [contract, walletAddress, gameData, setCurrentTradeRequest, setShowTradeRequestModal]);
+            
+            setShowAlert({
+                status: true,
+                type: 'success',
+                message: 'Trade accepted successfully!'
+            });
+        } catch (error) {
+            console.error("Failed to accept trade:", error);
+            setErrorMessage(error.message);
+        }
+    };
+
+    const handleRejectTradeRequest = async () => {
+        try {
+            await contract.rejectTrade(currentTradeRequest.from.address);
+            setShowTradeRequestModal(false);
+            
+            // Store that this trade was rejected in localStorage
+            if (currentTradeRequest.transactionHash) {
+                localStorage.setItem(`rejected_trade_${currentTradeRequest.transactionHash}`, 'true');
+            }
+            
+            setShowAlert({
+                status: true,
+                type: 'info',
+                message: 'Trade rejected'
+            });
+        } catch (error) {
+            console.error("Failed to reject trade:", error);
+            setErrorMessage(error.message);
+        }
+    };
 
     useEffect(() => {
       const timeout = setTimeout(() => {
@@ -203,50 +177,16 @@ const Battle = () => {
                           <p>Defense: {currentTradeRequest.to.defense}</p>
                       </div>
                   </div>
-                  <div className="flex justify-between w-full">
+                  <div className="flex space-x-4">
                       <CustomButton
                           title="Accept"
-                          handleClick={() => {
-                              // Store acceptance in localStorage
-                              if (currentTradeRequest.transactionHash) {
-                                  localStorage.setItem(`accepted_trade_${currentTradeRequest.transactionHash}`, 'true');
-                              }
-                              handleAcceptTrade(currentTradeRequest);
-                              setShowTradeRequestModal(false);
-                          }}
-                          restStyles="mr-2"
+                          handleClick={handleAcceptTradeRequest}
+                          restStyles="bg-green-500 hover:bg-green-600"
                       />
                       <CustomButton
                           title="Reject"
-                          handleClick={() => {
-                              // Add wallet confirmation for rejecting trade
-                              try {
-                                  // Call the contract method to reject trade
-                                  contract.rejectTrade(currentTradeRequest.from.address)
-                                      .then(() => {
-                                          // Mark as rejected in localStorage
-                                          localStorage.setItem(`rejected_trade_${currentTradeRequest.transactionHash}`, 'true');
-                                          
-                                          // Show success alert
-                                          setShowAlert({
-                                              status: true,
-                                              type: 'success',
-                                              message: 'Trade request rejected'
-                                          });
-                                          
-                                          // Close the modal
-                                          setShowTradeRequestModal(false);
-                                      })
-                                      .catch((error) => {
-                                          setErrorMessage(error);
-                                          console.error("Error rejecting trade:", error);
-                                      });
-                              } catch (error) {
-                                  setErrorMessage(error);
-                                  console.error("Error rejecting trade:", error);
-                              }
-                          }}
-                          restStyles="ml-2"
+                          handleClick={handleRejectTradeRequest}
+                          restStyles="bg-red-500 hover:bg-red-600"
                       />
                   </div>
               </div>

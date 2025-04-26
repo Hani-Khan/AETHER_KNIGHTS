@@ -109,15 +109,28 @@ const TradeCard = () => {
       // Since there's no direct way to get trade requests from the contract,
       // we'll use the contract events to simulate this functionality
       
-      // Get trade events from contract (this is a simplified approach)
+      // Get the current block number
+      const currentBlock = await contract.provider.getBlockNumber();
+      // Set a reasonable block range (last 2000 blocks to stay under the 2048 limit)
+      const fromBlock = Math.max(0, currentBlock - 2000);
+      
+      // Get trade events from contract with limited block range
       const filter = contract.filters.TradeRequested(null, walletAddress);
-      const events = await contract.queryFilter(filter);
+      const events = await contract.queryFilter(filter, fromBlock, currentBlock);
       
       const requests = [];
       
       // Process each event to get the trade request details
       for (const event of events) {
         const fromAddress = event.args.from;
+        const tradeHash = event.transactionHash;
+        
+        // Check if this trade was already accepted or rejected
+        const wasAccepted = localStorage.getItem(`accepted_trade_${tradeHash}`);
+        const wasRejected = localStorage.getItem(`rejected_trade_${tradeHash}`);
+        
+        // Skip this request if it was already handled
+        if (wasAccepted || wasRejected) continue;
         
         try {
           const player = await contract.getPlayer(fromAddress);
@@ -125,6 +138,7 @@ const TradeCard = () => {
           const myToken = await contract.getPlayerToken(walletAddress);
           
           const request = {
+            transactionHash: tradeHash,
             from: {
               address: fromAddress,
               name: player.playerName,
@@ -192,6 +206,12 @@ const TradeCard = () => {
   const handleAcceptTrade = async (request) => {
     try {
       await contract.acceptTrade(request.from.address);
+      
+      // Store that this trade was accepted in localStorage
+      if (request.transactionHash) {
+        localStorage.setItem(`accepted_trade_${request.transactionHash}`, 'true');
+      }
+      
       setShowAlert({
         status: true,
         type: 'success',
@@ -220,6 +240,11 @@ const TradeCard = () => {
         await contract.rejectTrade(request.from.address);
       }
       
+      // Store that this trade was rejected in localStorage
+      if (request.transactionHash) {
+        localStorage.setItem(`rejected_trade_${request.transactionHash}`, 'true');
+      }
+      
       setShowAlert({
         status: true,
         type: 'info',
@@ -244,11 +269,32 @@ const TradeCard = () => {
     const handleTradeRequested = async (from, to) => {
       if (to.toLowerCase() === walletAddress.toLowerCase()) {
         try {
+          // Get the latest block to find the transaction hash
+          const blockNumber = await contract.provider.getBlockNumber();
+          const filter = contract.filters.TradeRequested(from, to);
+          const events = await contract.queryFilter(filter, blockNumber - 10, blockNumber);
+          
+          // Get the transaction hash from the most recent event
+          let tradeHash = null;
+          if (events.length > 0) {
+            tradeHash = events[events.length - 1].transactionHash;
+          }
+          
+          // Check if this trade was already accepted or rejected
+          if (tradeHash) {
+            const wasAccepted = localStorage.getItem(`accepted_trade_${tradeHash}`);
+            const wasRejected = localStorage.getItem(`rejected_trade_${tradeHash}`);
+            
+            // Skip this request if it was already handled
+            if (wasAccepted || wasRejected) return;
+          }
+          
           const player = await contract.getPlayer(from);
           const token = await contract.getPlayerToken(from);
           const myToken = await contract.getPlayerToken(walletAddress);
           
           const request = {
+            transactionHash: tradeHash,
             from: {
               address: from,
               name: player.playerName,
@@ -409,8 +455,14 @@ const TradeCard = () => {
       {showTradeRequestModal && currentTradeRequest && (
         <Modal
           title="Trade Request"
-          onClose={() => setShowTradeRequestModal(false)}
-          hasCloseButton={false}
+          onClose={() => {
+            setShowTradeRequestModal(false);
+            // Mark as rejected when closed
+            if (currentTradeRequest.transactionHash) {
+              localStorage.setItem(`rejected_trade_${currentTradeRequest.transactionHash}`, 'true');
+            }
+          }}
+          hasCloseButton={true}
         >
           <div className="flex flex-col items-center">
             <p className="text-white text-lg mb-4">
