@@ -364,27 +364,31 @@ const TradeCard = () => {
 
       <h2 className={styles.joinHeadText}>Trade Cards with Players</h2>
       
-      {loading ? (
-        <p className={styles.infoText}>Loading players...</p>
-      ) : players.length > 0 ? (
-        <div className={styles.joinContainer}>
-          {players.map((player, index) => (
-            <div key={`player-${index}`} className={`${styles.flexBetween} bg-siteBlack p-4 rounded-lg my-2`}>
-              <div>
-                <p className={styles.normalText}>{player.name}</p>
-                <p className="text-yellow-400">ATK: {player.attack}</p>
-                <p className="text-red-600">DEF: {player.defense}</p>
+      {tradeEnabled ? (
+        loading ? (
+          <p className={styles.infoText}>Loading players...</p>
+        ) : players.length > 0 ? (
+          <div className={styles.joinContainer}>
+            {players.map((player, index) => (
+              <div key={`player-${index}`} className={`${styles.flexBetween} bg-siteBlack p-4 rounded-lg my-2`}>
+                <div>
+                  <p className={styles.normalText}>{player.name}</p>
+                  <p className="text-yellow-400">ATK: {player.attack}</p>
+                  <p className="text-red-600">DEF: {player.defense}</p>
+                </div>
+                <CustomButton
+                  title="Request Trade"
+                  handleClick={() => handleTradeRequest(player)}
+                  restStyles="bg-siteViolet"
+                />
               </div>
-              <CustomButton
-                title="Request Trade"
-                handleClick={() => handleTradeRequest(player)}
-                restStyles="bg-siteViolet"
-              />
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        ) : (
+          <p className={styles.infoText}>No players available for trading</p>
+        )
       ) : (
-        <p className={styles.infoText}>No players available for trading</p>
+        <p className={styles.infoText}>Enable trading to see available players</p>
       )}
 
       {/* Render incoming requests */}
