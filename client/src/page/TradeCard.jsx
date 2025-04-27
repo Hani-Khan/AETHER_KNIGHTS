@@ -137,6 +137,39 @@ const TradeCard = () => {
           const token = await contract.getPlayerToken(fromAddress);
           const myToken = await contract.getPlayerToken(walletAddress);
           
+          // Get the original stats that were stored when the trade was requested
+          const originalStatsString = localStorage.getItem(`original_stats_${tradeHash}`);
+          
+          // If we have original stats, check if they've changed
+          if (originalStatsString) {
+            const originalStats = JSON.parse(originalStatsString);
+            
+            // Check if either player's stats have changed
+            if (originalStats.from.attack !== token.attackStrength.toNumber() ||
+                originalStats.from.defense !== token.defenseStrength.toNumber() ||
+                originalStats.to.attack !== myToken.attackStrength.toNumber() ||
+                originalStats.to.defense !== myToken.defenseStrength.toNumber()) {
+              
+              // Stats have changed, mark this request as invalid
+              localStorage.setItem(`rejected_trade_${tradeHash}`, 'true');
+              continue; // Skip this request
+            }
+          } else {
+            // If we don't have original stats, store them now
+            const originalStats = {
+              from: {
+                attack: token.attackStrength.toNumber(),
+                defense: token.defenseStrength.toNumber()
+              },
+              to: {
+                attack: myToken.attackStrength.toNumber(),
+                defense: myToken.defenseStrength.toNumber()
+              }
+            };
+            
+            localStorage.setItem(`original_stats_${tradeHash}`, JSON.stringify(originalStats));
+          }
+          
           const request = {
             transactionHash: tradeHash,
             from: {
@@ -292,6 +325,22 @@ const TradeCard = () => {
           const player = await contract.getPlayer(from);
           const token = await contract.getPlayerToken(from);
           const myToken = await contract.getPlayerToken(walletAddress);
+          
+          // Store the original stats at the time of the request
+          if (tradeHash) {
+            const originalStats = {
+              from: {
+                attack: token.attackStrength.toNumber(),
+                defense: token.defenseStrength.toNumber()
+              },
+              to: {
+                attack: myToken.attackStrength.toNumber(),
+                defense: myToken.defenseStrength.toNumber()
+              }
+            };
+            
+            localStorage.setItem(`original_stats_${tradeHash}`, JSON.stringify(originalStats));
+          }
           
           const request = {
             transactionHash: tradeHash,
