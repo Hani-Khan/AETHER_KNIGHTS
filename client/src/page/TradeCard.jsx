@@ -456,7 +456,7 @@ const TradeCard = () => {
       )}
 
       {/* Trade Request Modal */}
-      {showTradeRequestModal && currentTradeRequest && (
+      {/* {showTradeRequestModal && currentTradeRequest && (
         <Modal
           title="Trade Request"
           onClose={() => {
@@ -498,7 +498,9 @@ const TradeCard = () => {
             </div>
           </div>
         </Modal>
-      )}
+      )
+      
+      } */}
     </>
   );
 };

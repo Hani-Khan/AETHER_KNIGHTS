@@ -149,7 +149,7 @@ const Battle = () => {
       {showAlert?.status && <Alert type={showAlert.type} message={showAlert.message} />}
       
       {/* Trade Request Modal - Ensure it's properly styled */}
-      {showTradeRequestModal && currentTradeRequest && (
+      {/* {showTradeRequestModal && currentTradeRequest && (
           <Modal
               title="Trade Request"
               onClose={() => {
@@ -192,7 +192,7 @@ const Battle = () => {
               </div>
           </Modal>
       )}
-      
+       */}
       <PlayerInfo player={player2} playerIcon={player02Icon} mt/>
       <div className={`${styles.flexCenter} flex-col my-10`}>
         <Card 
