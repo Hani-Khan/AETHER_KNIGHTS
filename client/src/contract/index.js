@@ -1,9 +1,10 @@
 import contract from './AVAXGods.json' assert { type: 'json' };
 
-export const contractAddress = "0x3dC5AF752C8152E25252CA9Ffb638e15De1Fa68b";
+export const contractAddress = "0xF9D86f4df2dCB99282BAf5e755Df1C97e20C90Bc";
 export const { abi: contractABI } = contract;
-  
 
+
+//0x3dC5AF752C8152E25252CA9Ffb638e15De1Fa68b
 // export const contractAddress = "0x4a4C73F7265b0C0b201f92D3d6c8ab58FfE4D3ae";
 //0x4a4C73F7265b0c0b201f92D3d6c8ab58FFE4D3ae ---> initial contract (nonchecksum)
 //0x4a4C73F7265b0C0b201f92D3d6c8ab58FfE4D3ae---> initial contract (checksum)
