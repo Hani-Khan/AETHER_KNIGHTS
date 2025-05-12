@@ -31,7 +31,7 @@ const PageHOC = (Component, title = '', description = '') => () => {
                     <Component /> {/* Render the passed-in component */}
                 </div>
 
-                <p className={`${styles.footerText} caveat`}>Made by Isha Hani || Ramin Qaiser || Nisha Shaukat</p>
+                <p className={`${styles.footerText} caveat`}>Made by: Isha Hani || Ramin Qaiser || Nisha Shaukat</p>
             </div>
 
             <div className='flex flex-1'>

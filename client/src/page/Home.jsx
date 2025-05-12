@@ -14,7 +14,7 @@ const Home = () => {
 
   const handleClick = async () => {
     // Handle player registration logic
-    // This block seems fine as it is
+    // This block seems fine 
 
     if (playerName.trim() === '') {
       setShowAlert({

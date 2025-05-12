@@ -13,9 +13,9 @@ async function main() {
   console.log(`Deploying a smart contract...`);
 
   const _metadataUri = 'https://gateway.pinata.cloud/ipfs/QmX2ubhtBPtYw75Wrpv6HLb1fhbJqxrnbhDo1RViW3oVoi';
-  const AVAXGods = await deploy('AVAXGods', _metadataUri);
+  const aetherKnights = await deploy('AetherKnights', _metadataUri);
 
-  console.log({ AVAXGods: await AVAXGods.getAddress() });
+  console.log({ AetherKnights: await aetherKnights.getAddress() });
 }
 
 main()

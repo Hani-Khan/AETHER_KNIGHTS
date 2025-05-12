@@ -106,21 +106,14 @@ const TradeCard = () => {
     if (!contract || !walletAddress) return;
     
     try {
-      // Since there's no direct way to get trade requests from the contract,
-      // we'll use the contract events to simulate this functionality
       
-      // Get the current block number
       const currentBlock = await contract.provider.getBlockNumber();
-      // Set a reasonable block range (last 2000 blocks to stay under the 2048 limit)
       const fromBlock = Math.max(0, currentBlock - 2000);
-      
-      // Get trade events from contract with limited block range
       const filter = contract.filters.TradeRequested(null, walletAddress);
       const events = await contract.queryFilter(filter, fromBlock, currentBlock);
       
       const requests = [];
       
-      // Process each event to get the trade request details
       for (const event of events) {
         const fromAddress = event.args.from;
         const tradeHash = event.transactionHash;
@@ -140,11 +133,9 @@ const TradeCard = () => {
           // Get the original stats that were stored when the trade was requested
           const originalStatsString = localStorage.getItem(`original_stats_${tradeHash}`);
           
-          // If we have original stats, check if they've changed
           if (originalStatsString) {
             const originalStats = JSON.parse(originalStatsString);
-            
-            // Check if either player's stats have changed
+        
             if (originalStats.from.attack !== token.attackStrength.toNumber() ||
                 originalStats.from.defense !== token.defenseStrength.toNumber() ||
                 originalStats.to.attack !== myToken.attackStrength.toNumber() ||
@@ -152,7 +143,7 @@ const TradeCard = () => {
               
               // Stats have changed, mark this request as invalid
               localStorage.setItem(`rejected_trade_${tradeHash}`, 'true');
-              continue; // Skip this request
+              continue; 
             }
           } else {
             // If we don't have original stats, store them now
@@ -194,7 +185,6 @@ const TradeCard = () => {
       
       setIncomingRequests(requests);
       
-      // If there are requests, show the first one
       if (requests.length > 0) {
         setCurrentTradeRequest(requests[0]);
         setShowTradeRequestModal(true);
@@ -267,8 +257,6 @@ const TradeCard = () => {
   // Handle reject trade
   const handleRejectTrade = async (request) => {
     try {
-      // If there's a rejectTrade function in the contract, call it
-      // Otherwise just close the modal
       if (contract.rejectTrade) {
         await contract.rejectTrade(request.from.address);
       }
@@ -302,12 +290,10 @@ const TradeCard = () => {
     const handleTradeRequested = async (from, to) => {
       if (to.toLowerCase() === walletAddress.toLowerCase()) {
         try {
-          // Get the latest block to find the transaction hash
           const blockNumber = await contract.provider.getBlockNumber();
           const filter = contract.filters.TradeRequested(from, to);
           const events = await contract.queryFilter(filter, blockNumber - 10, blockNumber);
           
-          // Get the transaction hash from the most recent event
           let tradeHash = null;
           if (events.length > 0) {
             tradeHash = events[events.length - 1].transactionHash;
@@ -318,7 +304,7 @@ const TradeCard = () => {
             const wasAccepted = localStorage.getItem(`accepted_trade_${tradeHash}`);
             const wasRejected = localStorage.getItem(`rejected_trade_${tradeHash}`);
             
-            // Skip this request if it was already handled
+            
             if (wasAccepted || wasRejected) return;
           }
           
@@ -504,52 +490,7 @@ const TradeCard = () => {
         </Modal>
       )}
 
-      {/* Trade Request Modal */}
-      {/* {showTradeRequestModal && currentTradeRequest && (
-        <Modal
-          title="Trade Request"
-          onClose={() => {
-            setShowTradeRequestModal(false);
-            // Mark as rejected when closed
-            if (currentTradeRequest.transactionHash) {
-              localStorage.setItem(`rejected_trade_${currentTradeRequest.transactionHash}`, 'true');
-            }
-          }}
-          hasCloseButton={true}
-        >
-          <div className="flex flex-col items-center">
-            <p className="text-white text-lg mb-4">
-              {currentTradeRequest.from.name} wants to trade with you!
-            </p>
-            <div className="flex justify-between w-full mb-4">
-              <div className="text-white">
-                <p className="font-bold">Their Card:</p>
-                <p>Attack: {currentTradeRequest.from.attack}</p>
-                <p>Defense: {currentTradeRequest.from.defense}</p>
-              </div>
-              <div className="text-white">
-                <p className="font-bold">Your Card:</p>
-                <p>Attack: {currentTradeRequest.to.attack}</p>
-                <p>Defense: {currentTradeRequest.to.defense}</p>
-              </div>
-            </div>
-            <div className="flex justify-between w-full">
-              <CustomButton
-                title="Accept"
-                handleClick={() => handleAcceptTrade(currentTradeRequest)}
-                restStyles="mx-2 bg-green-600"
-              />
-              <CustomButton
-                title="Reject"
-                handleClick={() => handleRejectTrade(currentTradeRequest)}
-                restStyles="mx-2 bg-red-600"
-              />
-            </div>
-          </div>
-        </Modal>
-      )
-      
-      } */}
+     
     </>
   );
 };

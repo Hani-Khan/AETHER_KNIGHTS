@@ -40,7 +40,6 @@ console.log('Pending Battle', + ' ' + gameData?.activeBattle?.battleStatus === 0
       setLoading(false);
     }
   }, [gameData]);
-// My Addtition 
 const handleClick = async () => {
   if (!battleName || !battleName.trim()) return null;
 
@@ -78,38 +77,6 @@ const handleClick = async () => {
     setLoading(false);
   }
 };
-// original handleClick()
-  // const handleClick = async () => {
-  //   if(!battleName || !battleName.trim()) return null
-
-  //   setLoading(true)
-  //   setLoadingMessage('Creating your Battle');
-
-  //   try {
-  //     const battleNameExists = await contract.isBattle(battleName);
-  //     if(battleNameExists === true ){
-  //       setShowAlert({
-  //         status: true,
-  //         type: 'failure',
-  //         message: 'Battle Already exist!'
-  //       })
-  //       setLoading(false);
-  //     }
-      
-  //     const createBattle = await contract.createBattle(battleName, {
-  //       gasLimit: 200000
-  //     });
-  //     if(createBattle){
-  //       setWaitBattle(true);
-  //     } else {
-  //       setLoading(true);
-  //     }
-  //   } catch (error) {
-  //     setErrorMessage(error);
-  //   } finally {
-  //     setLoading(false);
-  //   }
-  // }
 
   return (
     <>{loading && <Loader message={loadingMessage}/>}

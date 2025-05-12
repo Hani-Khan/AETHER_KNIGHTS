@@ -28,6 +28,7 @@ const Battle = () => {
     } = useGlobalContext();
     const [player1, setPlayer1] = useState({});
     const [player2, setPlayer2] = useState({});
+    const [hasMadeMove, setHasMadeMove] = useState(false);
 
     const { battleName } = useParams();
     const navigate = useNavigate();
@@ -67,28 +68,58 @@ const Battle = () => {
 
           setPlayer1({ ...player01, att: p1Att, def: p1Def, health: p1H, mana: p1M })
           setPlayer2({ ...player02, att: 'X', def: 'X', health: p2H, mana: p2M })
+          
+          // Check if player has already made a move
+          if (gameData.activeBattle) {
+            const [p1Move, p2Move] = await contract.getBattleMoves(battleName);
+            const playerIndex = gameData.activeBattle.players[0].toLowerCase() === walletAddress.toLowerCase() ? 0 : 1;
+            const hasAlreadyMoved = playerIndex === 0 ? p1Move.toNumber() !== 0 : p2Move.toNumber() !== 0;
+            setHasMadeMove(hasAlreadyMoved);
+          }
         } catch (error) {
           setErrorMessage(error.message);
         }
       }
       getPlayerInfo();
-    }, [contract, gameData, battleName]);
+    }, [contract, gameData, battleName, walletAddress]);
 
     const makeAMove = async (choice) => {
+      // Check if player has already made a move
+      if (hasMadeMove) {
+        setShowAlert({
+          status: true,
+          type: 'failure',
+          message: 'You have already made your move for this round!',
+        });
+        return;
+      }
+      
+      // Check if player has enough mana for attack (choice 1)
+      if (choice === 1 && player1.mana < 3) {
+        setShowAlert({
+          status: true,
+          type: 'failure',
+          message: 'Insufficient mana! You need at least 3 mana to attack.',
+        });
+        return; // Stop execution to prevent wallet confirmation
+      }
+      
       playAudio(choice === 1 ? attackSound : defenseSound)
       try {
         await contract.attackOrDefendChoice(choice, battleName, { gasLimit: 200000 });
         
         setShowAlert({
-        status: true,
-        type: 'info',
-        message: `Initiating ${choice === 1 ? 'attack' : 'defense'}`,
-      });
+          status: true,
+          type: 'info',
+          message: `Initiating ${choice === 1 ? 'attack' : 'defense'}`,
+        });
+        
+        // Update local state to prevent multiple moves
+        setHasMadeMove(true);
 
       } catch (error) {
         console.log(error);
         setErrorMessage(error);
-        
       }
     }
 
@@ -148,51 +179,6 @@ const Battle = () => {
     <div className={`${styles.flexBetween} ${styles.gameContainer} ${battleGround}`}>
       {showAlert?.status && <Alert type={showAlert.type} message={showAlert.message} />}
       
-      {/* Trade Request Modal - Ensure it's properly styled */}
-      {/* {showTradeRequestModal && currentTradeRequest && (
-          <Modal
-              title="Trade Request"
-              onClose={() => {
-                  setShowTradeRequestModal(false);
-                  // Mark as rejected when closed
-                  if (currentTradeRequest.transactionHash) {
-                      localStorage.setItem(`rejected_trade_${currentTradeRequest.transactionHash}`, 'true');
-                  }
-              }}
-              hasCloseButton={true}
-          >
-              <div className="flex flex-col items-center">
-                  <p className="text-white text-lg mb-4">
-                      {currentTradeRequest.from.name} wants to trade with you!
-                  </p>
-                  <div className="flex justify-between w-full mb-4">
-                      <div className="text-white">
-                          <p className="font-bold">Their Card:</p>
-                          <p>Attack: {currentTradeRequest.from.attack}</p>
-                          <p>Defense: {currentTradeRequest.from.defense}</p>
-                      </div>
-                      <div className="text-white">
-                          <p className="font-bold">Your Card:</p>
-                          <p>Attack: {currentTradeRequest.to.attack}</p>
-                          <p>Defense: {currentTradeRequest.to.defense}</p>
-                      </div>
-                  </div>
-                  <div className="flex space-x-4">
-                      <CustomButton
-                          title="Accept"
-                          handleClick={handleAcceptTradeRequest}
-                          restStyles="bg-green-500 hover:bg-green-600"
-                      />
-                      <CustomButton
-                          title="Reject"
-                          handleClick={handleRejectTradeRequest}
-                          restStyles="bg-red-500 hover:bg-red-600"
-                      />
-                  </div>
-              </div>
-          </Modal>
-      )}
-       */}
       <PlayerInfo player={player2} playerIcon={player02Icon} mt/>
       <div className={`${styles.flexCenter} flex-col my-10`}>
         <Card 

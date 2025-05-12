@@ -1,4 +1,4 @@
-//My addition
+
 import { Buffer } from "buffer";
 // Polyfill Buffer for browser compatibility
 if (typeof window !== "undefined") {

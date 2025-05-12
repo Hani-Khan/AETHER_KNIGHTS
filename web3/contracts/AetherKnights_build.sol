@@ -5,13 +5,9 @@ import "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC1155/extensions/ERC1155Supply.sol";
 
-/**
- * @author Obanla Adeniyi (niy42)
- * @title AvaxGods
- * @notice This contract manages the tokens and battle logic for the AvaxGods game.
- */
 
-contract AvaxGods_build is ERC1155, ERC1155Supply, Ownable {
+
+contract AetherKnights_build is ERC1155, ERC1155Supply, Ownable {
     string internal baseURI; // URI for ERC1155 metadata
     uint256 private immutable MAX_ATTACK_DEFEND_STRENGTH = 10;
     uint256 internal totalTokenMinted; //total tokenminted
@@ -402,9 +398,7 @@ contract AvaxGods_build is ERC1155, ERC1155Supply, Ownable {
                 players[p1.index].playerMana -= 3;
                 players[p2.index].playerMana -= 3;
 
-                //or
-                //players[playerInfo[battles[battleInfo[_name]].players[0]]].playerMana -= 3;
-                //players[playerInfo[battles[battleInfo[_name]].players[1]]].playerMana -= 3;
+                
 
                 _damagedPlayers = _battle.players; // both players health damaged
             }
@@ -491,14 +485,7 @@ contract AvaxGods_build is ERC1155, ERC1155Supply, Ownable {
             : _endBattle(_battle.players[0], _battle);
     }
 
-    /*struct Px {
-        uint256 health;
-        uint256 mana;
-        uint8 move;
-        uint256 index;
-        uint256 attack;
-        uint256 defense;
-    }*/
+  
 
     function _endBattle(address _player, Battle memory _battle) internal {
         require(_battle.battleStatus != BattleStatus.END, "Battle has ended!");
@@ -530,8 +517,7 @@ contract AvaxGods_build is ERC1155, ERC1155Supply, Ownable {
                 abi.encodePacked(baseURI, "/", _uintToString(_int), ".json")
             );
     }
-    // function to convert integer to a string in Solidity
-    // bytes is dynamic byte array used in performing low-level operations
+   
     /// @param _int: number to be passed
     function _uintToString(uint _int) public pure returns (bytes memory) {
         if (_int == 0) {

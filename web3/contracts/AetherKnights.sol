@@ -6,16 +6,9 @@ import "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC1155/extensions/ERC1155Supply.sol";
 
-/// @title AVAXGods
-/// @notice This contract handles the token management and battle logic for the AVAXGods game
-/// @notice Version 1.0.0
-/// @author Ava-Labs
-/// @author Julian Martinez
-/// @author Gabriel Cardona
-/// @author Raj Ranjan
-/// @author Obanla Adeniyi (niy42)
 
-contract AVAXGods is ERC1155, Ownable(msg.sender), ERC1155Supply {
+
+contract AetherKnights is ERC1155, Ownable(msg.sender), ERC1155Supply {
     string public baseURI; // baseURI where token metadata is stored
     uint256 public totalTokenMinted; // Total number of tokens minted
     uint256 public constant DEVIL = 0;
