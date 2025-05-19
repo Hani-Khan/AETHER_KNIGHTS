@@ -96,6 +96,11 @@ const handleClick = async () => {
             title='Create Battle'
             handleClick={handleClick}
             restStyles='mt-6'/>
+            
+          <CustomButton 
+            title='View History'
+            handleClick={() => navigate('/player-history')}
+            restStyles='mt-3'/>
           </>
         )}
         <p className={styles.infoText} onClick={() => navigate('/join-battle')}>or join an existing Battle</p>

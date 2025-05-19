@@ -4,3 +4,4 @@ export { default as JoinBattle } from './JoinBattle';
 export { default as Battle } from './Battle';
 export { default as Battleground } from './Battleground';
 export { default as TradeCard } from './TradeCard';
+export { default as PlayerHistory } from './PlayerHistory';
