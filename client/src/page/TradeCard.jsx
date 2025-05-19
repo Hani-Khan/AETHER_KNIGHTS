@@ -498,5 +498,5 @@ const TradeCard = () => {
 export default PageHOC(
   TradeCard,
   <>Trade <br /> Your Cards</>,
-  <>Trade your cards with other players to improve your deck</>
+  <>Exchange powers to outsmart your rivals!</>
 );
