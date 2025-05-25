@@ -77,14 +77,9 @@ export const createEventListeners = ({ navigate, contract, provider, walletAddre
                         message: `Joined battle as ${walletAddress.toLowerCase() === args.player1.toLowerCase() ? 'Player 1' : 'Player 2'}`
                     });
                     navigate(`/battle/${args.battleName}`);
-                } else {
-                    setShowAlert({
-                        status: true,
-                        type: 'failure',
-                        message: 'You are not a participant in this battle.'
-                    });
-                    console.log('Current wallet is not a participant in this battle.');
                 }
+                // Remove the else block that shows the "not a participant" alert
+                // This prevents showing the alert to users who aren't in the battle
 
                 setUpdateGameData((prevUpdateGameData) => prevUpdateGameData + 1);
             });
@@ -99,22 +94,40 @@ export const createEventListeners = ({ navigate, contract, provider, walletAddre
                 console.log('Round ended! ', args, walletAddress);
                 
                 try {
-                    let i = 0;
-                    while(i < args.damagedPlayers.length){
-                        if(args.damagedPlayers[i] !== emptyAccount){
-                            if(args.damagedPlayers[i] === walletAddress){
-                                sparcle(getCoords(player1Ref));
-                            } else if(args.damagedPlayers[i] !== walletAddress){
-                                sparcle(getCoords(player2Ref));
-                            }
-                        } else {
-                            playAudio(defenseSound);
+                    // Get the current battle name from the URL
+                    const currentPath = window.location.pathname;
+                    const battlePathMatch = currentPath.match(/\/battle\/(.+)/);
+                    const currentBattleName = battlePathMatch ? battlePathMatch[1] : null;
+                    
+                    // Only play sounds and animations if we're in a battle
+                    if (currentBattleName) {
+                        // Check if the current player is one of the players in this battle
+                        const isPlayerInBattle = args.damagedPlayers.some(
+                            player => player.toLowerCase() === walletAddress.toLowerCase()
+                        );
+                        
+                        if (isPlayerInBattle) {
+                            let i = 0;
+                            while(i < args.damagedPlayers.length){
+                                if(args.damagedPlayers[i] !== emptyAccount){
+                                    if(args.damagedPlayers[i] === walletAddress){
+                                        sparcle(getCoords(player1Ref));
+                                    } else if(args.damagedPlayers[i] !== walletAddress){
+                                        sparcle(getCoords(player2Ref));
+                                    }
+                                } else {
+                                    playAudio(defenseSound);
+                                }
+                                i++;
+                            } 
                         }
-                        i++;
-                    } 
-                    setUpdateGameData((prevUpdateGameData) => prevUpdateGameData + 1);  
+                    }
+                    
+                    setUpdateGameData((prevUpdateGameData) => prevUpdateGameData + 1);
                 } catch (error) {
-                    console.error(error);
+                    console.error("Error in RoundEndedEvent:", error);
+                    // Still update game data even if there's an error
+                    setUpdateGameData((prevUpdateGameData) => prevUpdateGameData + 1);
                 }
             });
 

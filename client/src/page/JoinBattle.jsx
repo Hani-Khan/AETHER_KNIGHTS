@@ -15,13 +15,28 @@ const JoinBattle = () => {
   const handleClick = async (battleName) => {
     setBattleName(battleName);
 
+    // Check if the battle has already started
     try {
+      // Find the battle in pendingBattles
+      const battle = gameData.pendingBattles.find((b) => b.name === battleName);
+      
+      // Check if battle exists and its status
+      if (!battle || battle.battleStatus !== 0) {
+        setShowAlert({
+          status: true,
+          type: 'failure',
+          message: `Battle ${battleName} has already started!`
+        });
+        return; // Exit early without calling contract.joinBattle
+      }
+      
+      // If battle hasn't started, proceed with joining
       await contract.joinBattle(battleName);
       setShowAlert({
         status: true,
         type: 'success',
         message: `Joining ${battleName}`
-      })
+      });
       navigate(`/battle/${battleName}`);
     } catch (error) {
       setErrorMessage(error);
@@ -51,7 +66,7 @@ const JoinBattle = () => {
 
               </div>
             ))
-            : <p className={styles.joinLoading}>Reload the name to see new battles</p>
+            : <p className={styles.joinLoading}>Reload the page to see new battles</p>
           }
           
         </div>

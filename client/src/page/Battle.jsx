@@ -84,6 +84,36 @@ const Battle = () => {
     }, [contract, gameData, battleName, walletAddress]);
 
     const makeAMove = async (choice) => {
+      // Check if battle still exists and is active
+      if (!gameData?.activeBattle) {
+        setShowAlert({
+          status: true,
+          type: 'failure',
+          message: 'Battle no longer exists! Refresh page to get to home...',
+        });
+        setTimeout(() => navigate('/'), 2000);
+        return;
+      }
+      
+      // Check if both players are still in the battle
+      try {
+        const player1InBattle = await contract.getPlayer(gameData.activeBattle.players[0]).then(p => p.inBattle);
+        const player2InBattle = await contract.getPlayer(gameData.activeBattle.players[1]).then(p => p.inBattle);
+        
+        if (!player1InBattle || !player2InBattle) {
+          setShowAlert({
+            status: true,
+            type: 'failure',
+            message: 'A player has left the battle! Cast the Spell of Refreshing!...',
+          });
+          setTimeout(() => navigate('/'), 2000);
+          return;
+        }
+      } catch (error) {
+        console.error("Error checking if players are in battle:", error);
+        setErrorMessage(error);
+      }
+      
       // Check if player has already made a move
       if (hasMadeMove) {
         setShowAlert({
@@ -176,7 +206,7 @@ const Battle = () => {
     }, []);
 
   return (
-    <div className={`${styles.flexBetween} ${styles.gameContainer} ${battleGround}`}>
+    <div className={`${styles.flexBetween} ${styles.gameContainer} ${battleGround} h-screen overflow-hidden`}>
       {showAlert?.status && <Alert type={showAlert.type} message={showAlert.message} />}
       
       <PlayerInfo player={player2} playerIcon={player02Icon} mt/>

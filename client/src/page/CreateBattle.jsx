@@ -40,6 +40,15 @@ console.log('Pending Battle', + ' ' + gameData?.activeBattle?.battleStatus === 0
       setLoading(false);
     }
   }, [gameData]);
+
+  // This effect will run whenever the component mounts or gameData changes
+  // It ensures the GameLoad component is shown when there's a pending battle
+  useEffect(() => {
+    if (gameData?.activeBattle?.battleStatus === 0) {
+      setWaitBattle(true);
+    }
+  }, [gameData]);
+
 const handleClick = async () => {
   if (!battleName || !battleName.trim()) return null;
 
@@ -81,30 +90,29 @@ const handleClick = async () => {
   return (
     <>{loading && <Loader message={loadingMessage}/>}
       {waitBattle && <GameLoad />}
-      <div className='flex flex-col mb-5'>
-        {!loading && (
-          <>
-            <CustomInput 
+      {!waitBattle && !loading && (
+        <div className='flex flex-col mb-5'>
+          <CustomInput 
             id='name'
             label='name'
             placeholder='Enter battle name'
             value={battleName}
             autocompleteValue='on'
             handleValueChange={setBattleName}
-            />
+           
+          />
           <CustomButton 
             title='Create Battle'
             handleClick={handleClick}
             restStyles='mt-6'/>
             
           <CustomButton 
-            title='View History'
+            title='Player History'
             handleClick={() => navigate('/player-history')}
             restStyles='mt-3'/>
-          </>
-        )}
-        <p className={styles.infoText} onClick={() => navigate('/join-battle')}>or join an existing Battle</p>
-      </div>
+          <p className={`${styles.infoText} mt-6`} onClick={() => navigate('/join-battle')}>or join an existing Battle</p>
+        </div>
+      )}
     </>
   )
 };

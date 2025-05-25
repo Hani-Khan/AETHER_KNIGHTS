@@ -228,6 +228,46 @@ const TradeCard = () => {
   // Handle accept trade
   const handleAcceptTrade = async (request) => {
     try {
+      // Get current stats to verify they haven't changed
+      const fromToken = await contract.getPlayerToken(request.from.address);
+      const myToken = await contract.getPlayerToken(walletAddress);
+      
+      // Get the original stats that were stored when the trade was requested
+      const originalStatsString = localStorage.getItem(`original_stats_${request.transactionHash}`);
+      
+      if (originalStatsString) {
+        const originalStats = JSON.parse(originalStatsString);
+    
+        if (originalStats.from.attack !== fromToken.attackStrength.toNumber() || 
+            originalStats.from.defense !== fromToken.defenseStrength.toNumber() || 
+            originalStats.to.attack !== myToken.attackStrength.toNumber() || 
+            originalStats.to.defense !== myToken.defenseStrength.toNumber()) {
+          
+          // Stats have changed, mark this request as invalid
+          localStorage.setItem(`rejected_trade_${request.transactionHash}`, 'true');
+          
+          setShowAlert({
+            status: true,
+            type: 'failure',
+            message: 'Trade rejected: Card stats have changed since the request was made.'
+          });
+          
+          // Remove from incoming requests
+          setIncomingRequests(prev => prev.filter(r => r.transactionHash !== request.transactionHash));
+          setShowTradeRequestModal(false);
+          return;
+        }
+      } else {
+        // If we don't have original stats, we can't verify the trade
+        setShowAlert({
+          status: true,
+          type: 'failure',
+          message: 'Cannot verify trade: Original stats not found.'
+        });
+        return;
+      }
+      
+      // If stats match, proceed with accepting the trade
       await contract.acceptTrade(request.from.address);
       
       // Store that this trade was accepted in localStorage
@@ -362,7 +402,7 @@ const TradeCard = () => {
   }, [contract, walletAddress, gameData]);
 
   return (
-    <>
+    <div className="flex flex-col h-screen overflow-hidden">
       {/* Toggle Button for Trade Functionality */}
       <div className="flex justify-between items-center mb-6">
         <div className="flex items-center">
@@ -403,7 +443,7 @@ const TradeCard = () => {
         loading ? (
           <p className={styles.infoText}>Loading players...</p>
         ) : players.length > 0 ? (
-          <div className={styles.joinContainer}>
+          <div className={`${styles.joinContainer} max-h-[400px] overflow-y-auto pr-2 custom-scrollbar`}>
             {players.map((player, index) => (
               <div key={`player-${index}`} className={`${styles.flexBetween} bg-siteBlack p-4 rounded-lg my-2`}>
                 <div>
@@ -430,7 +470,7 @@ const TradeCard = () => {
       {incomingRequests.length > 0 && (
         <div className="mt-10">
           <h2 className={styles.joinHeadText}>Incoming Trade Requests</h2>
-          <div className={styles.joinContainer}>
+          <div className={`${styles.joinContainer} max-h-[300px] overflow-y-auto pr-2 custom-scrollbar`}>
             {incomingRequests.map((request, index) => (
               <div key={`request-${index}`} className={`${styles.flexBetween} bg-siteBlack p-4 rounded-lg my-2`}>
                 <div>
@@ -491,7 +531,7 @@ const TradeCard = () => {
       )}
 
      
-    </>
+    </div>
   );
 };
 

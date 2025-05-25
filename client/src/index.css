@@ -10,6 +10,7 @@ html, body {
   margin: 0;
   padding: 0;
   overflow-x: hidden; /* Prevents horizontal scroll */
+  overflow-y: hidden; /* Prevents vertical scroll - adding this */
 }
 * {
   box-sizing: border-box;
@@ -73,7 +74,8 @@ html, body {
 }
 
 body {
-  overflow: hidden; /* Hide scrollbars */
+  /* Remove this line to allow scrolling */
+  /* overflow: hidden; */ 
 }
 
 /* Battle Animation Effect */
@@ -312,4 +314,23 @@ body {
 
 .mov:nth-child(4) {
   animation-delay: -0.2s;
+}
+
+/* Custom scrollbar styling */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 8px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 10px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(127, 70, 240, 0.6);
+  border-radius: 10px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(127, 70, 240, 0.8);
 }

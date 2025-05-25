@@ -24,10 +24,52 @@ const GameInfo = () => {
       setShowAlert({
         status: true,
         type: "info",
-        message: `You're quitting ${battleName} battle`,
+        message: `You're quitting ${battleName} battle, Refresh the page to go to main menue`,
       });
     } catch (error) {
       setErrorMessage(error);
+    }
+  };
+
+  const checkBattleStatus = async () => {
+    // Check if battle still exists and is active
+    if (!gameData?.activeBattle) {
+      setShowAlert({
+        status: true,
+        type: 'failure',
+        message: 'Battle no longer exists! Refresh page to get to home...',
+      });
+      setTimeout(() => navigate('/'), 2000);
+      return false;
+    }
+    
+    // Check if both players are still in the battle
+    try {
+      const player1InBattle = await contract.getPlayer(gameData.activeBattle.players[0]).then(p => p.inBattle);
+      const player2InBattle = await contract.getPlayer(gameData.activeBattle.players[1]).then(p => p.inBattle);
+      
+      if (!player1InBattle || !player2InBattle) {
+        setShowAlert({
+          status: true,
+          type: 'failure',
+          message: 'A player has left the battle! Cast the Spell of Refreshing!...',
+        });
+        setTimeout(() => navigate('/'), 2000);
+        return false;
+      }
+      
+      return true;
+    } catch (error) {
+      console.error("Error checking if players are in battle:", error);
+      setErrorMessage(error);
+      return false;
+    }
+  };
+
+  const handleInfoButtonClick = async () => {
+    const isBattleActive = await checkBattleStatus();
+    if (isBattleActive) {
+      setToggleSideBar(true);
     }
   };
 
@@ -36,7 +78,7 @@ const GameInfo = () => {
       <div className={styles.gameInfoIconBox}>
         <div
           className={`${styles.gameInfoIcon} ${styles.flexCenter}`}
-          onClick={() => setToggleSideBar(true)}
+          onClick={handleInfoButtonClick}
         >
           <img src={alertIcon} alt="info" className={styles.gameInfoIconImg} />
         </div>
